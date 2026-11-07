@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\IndexAttendanceRecordRequest;
 use App\Http\Resources\AttendanceRecordResource;
 use App\Models\AttendanceRecord;
-use Illuminate\Http\Request;
+use App\Http\Requests\Api\V1\StoreAttendanceRecordRequest;
+use App\Http\Requests\Api\V1\UpdateAttendanceRecordRequest;
+
 
 class AttendanceRecordController extends Controller
 {
@@ -69,14 +71,75 @@ class AttendanceRecordController extends Controller
 
     }
 
-    public function show($attendanceRecord) {}
+    public function show(
+        AttendanceRecord $attendanceRecord) {
+            $attendanceRecord->load([
+            'user',
+            'breaks',
+            'applications',
+            ]);
 
-    public function store(Request $request) {}
+            return new AttendanceRecordResource(
+            $attendanceRecord
+            );
+        }
+
+    public function store(StoreAttendanceRecordRequest $request) {
+        $validated = $request->validated();
+
+        $attendanceRecord = $request->user()
+            ->attendanceRecords()
+            ->create($validated);
+
+        $attendanceRecord->load([
+            'user',
+            'breaks',
+        ]);
+
+        return (
+            new AttendanceRecordResource(
+                $attendanceRecord
+            )
+        )->response()->setStatusCode(201);
+
+
+    }
 
     public function update(
-        Request $request,
-        $attendanceRecord
-    ) {}
+        UpdateAttendanceRecordRequest $request,
+        AttendanceRecord $attendanceRecord    
+    ) 
 
-    public function destroy($attendanceRecord) {}
+    {
+        $this->authorize(
+            'update',
+            $attendanceRecord
+        );
+
+        $validated = $request->validated();
+
+        $attendanceRecord->update($validated);
+
+        $attendanceRecord->load([
+            'user',
+            'breaks',
+        ]);
+
+        return new AttendanceRecordResource(
+            $attendanceRecord
+        );
+    }
+
+    public function destroy(
+        AttendanceRecord $attendanceRecord ) 
+        {
+            $this->authorize(
+            'delete',
+            $attendanceRecord
+            );
+            
+            $attendanceRecord->delete();
+
+            return response()->noContent();
+        }
 }
