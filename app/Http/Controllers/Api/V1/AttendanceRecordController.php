@@ -116,6 +116,7 @@ class AttendanceRecordController extends Controller
             $attendanceRecord
         );
 
+        
         $validated = $request->validated();
 
         $attendanceRecord->update($validated);
