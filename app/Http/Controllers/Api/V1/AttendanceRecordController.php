@@ -10,6 +10,7 @@ use App\Http\Requests\Api\V1\StoreAttendanceRecordRequest;
 use App\Http\Requests\Api\V1\UpdateAttendanceRecordRequest;
 
 
+
 class AttendanceRecordController extends Controller
 {
     public function index(
@@ -87,6 +88,8 @@ class AttendanceRecordController extends Controller
     public function store(StoreAttendanceRecordRequest $request) {
         $validated = $request->validated();
 
+        $validated['status'] = '出勤中';
+        
         $attendanceRecord = $request->user()
             ->attendanceRecords()
             ->create($validated);
@@ -95,7 +98,7 @@ class AttendanceRecordController extends Controller
             'user',
             'breaks',
         ]);
-
+        
         return (
             new AttendanceRecordResource(
                 $attendanceRecord

@@ -150,3 +150,9 @@ Route::post(
     '/stamp_correction_request/approve/{id}',
     [AttendanceController::class, 'approve']
 );
+
+Route::post(
+    '/export',
+    [AttendanceController::class, 'export']
+);
+

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 // Request
 use App\Http\Requests\AttendanceCorrectionRequest;
@@ -921,6 +922,107 @@ class AttendanceController extends Controller
                 'monthlyTrend',
                 'anomalies'
             )
+        );      
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $userId = $request->user_id;
+        $yearMonth = $request->year_month;
+
+        $attendanceRecords = AttendanceRecord::where('user_id', $userId)
+            ->whereYear('date', Carbon::parse($yearMonth)->year)
+            ->whereMonth('date', Carbon::parse($yearMonth)->month)
+            ->with('attendanceBreaks')
+            ->orderBy('date')
+            ->get();
+
+        $fileName = 'attendance_' . $yearMonth . '.csv';
+
+        return response()->streamDownload(
+            function () use ($attendanceRecords) {
+
+                $handle = fopen('php://output', 'w');
+
+                fputcsv(
+                    $handle,
+                    mb_convert_encoding(
+                        [
+                            '日付',
+                            '出勤',
+                            '退勤',
+                            '休憩',
+                            '合計',
+                            '備考',
+                        ],
+                        'SJIS-win',
+                        'UTF-8'
+                    )
+                );
+
+                foreach ($attendanceRecords as $record) {
+
+                    $totalBreakMinutes = 0;
+
+                    foreach ($record->attendanceBreaks as $break) {
+
+                        if ($break->break_in && $break->break_out) {
+
+                            $breakIn = Carbon::parse($break->break_in);
+                            $breakOut = Carbon::parse($break->break_out);
+
+                            $totalBreakMinutes += $breakOut
+                                ->diffInMinutes($breakIn);
+                        }
+                    }
+
+                    $totalBreakTime = sprintf(
+                        '%02d:%02d',
+                        floor($totalBreakMinutes / 60),
+                        $totalBreakMinutes % 60
+                    );
+
+                    $totalWorkTime = '';
+
+                    if ($record->clock_in && $record->clock_out) {
+
+                        $clockIn = Carbon::parse($record->clock_in);
+                        $clockOut = Carbon::parse($record->clock_out);
+
+                        $workMinutes =
+                            $clockOut->diffInMinutes($clockIn)
+                            - $totalBreakMinutes;
+
+                        $totalWorkTime = sprintf(
+                            '%02d:%02d',
+                            floor($workMinutes / 60),
+                            $workMinutes % 60
+                        );
+                    }
+
+                    fputcsv(
+                        $handle,
+                        mb_convert_encoding(
+                            [
+                                $record->date,
+                                $record->clock_in,
+                                $record->clock_out,
+                                $totalBreakTime,
+                                $totalWorkTime,
+                                $record->comment,
+                            ],
+                            'SJIS-win',
+                            'UTF-8'
+                        )
+                    );
+                }
+
+                fclose($handle);
+            },
+            $fileName,
+            [
+                'Content-Type' => 'text/csv',
+            ]
         );
     }
     

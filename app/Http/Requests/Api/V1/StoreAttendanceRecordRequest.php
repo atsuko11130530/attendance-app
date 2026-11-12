@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\V1;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreAttendanceRecordRequest extends FormRequest
 {
@@ -19,6 +20,14 @@ class StoreAttendanceRecordRequest extends FormRequest
             'date' => [
                 'required',
                 'date_format:Y-m-d',
+
+                Rule::unique('attendance_records')
+                    ->where(function ($query) {
+                        return $query->where(
+                            'user_id',
+                            auth()->id()
+                        );
+                    }),
             ],
 
             'clock_in' => [
@@ -49,6 +58,9 @@ class StoreAttendanceRecordRequest extends FormRequest
 
             'date.date_format' =>
             '勤怠日は YYYY-MM-DD 形式で指定してください。',
+
+            'date.unique' =>
+            'この日付の勤怠は既に登録されています。',
 
             'clock_in.required' =>
             '出勤時刻は必須です。',

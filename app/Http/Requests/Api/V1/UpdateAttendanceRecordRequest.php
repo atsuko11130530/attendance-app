@@ -3,22 +3,17 @@
 namespace App\Http\Requests\Api\V1;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAttendanceRecordRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+    
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+   
     public function rules(): array
     {
         return [
@@ -27,7 +22,19 @@ class UpdateAttendanceRecordRequest extends FormRequest
                 'sometimes',
                 'required',
                 'date_format:Y-m-d',
+
+                Rule::unique('attendance_records')
+                    ->where(function ($query) {
+                        return $query->where(
+                            'user_id',
+                            auth()->id()
+                        );
+                    })
+                    ->ignore(
+                        $this->route('attendanceRecord')
+                    ),
             ],
+            
 
             'clock_in' => [
                 'sometimes',
@@ -60,6 +67,9 @@ class UpdateAttendanceRecordRequest extends FormRequest
 
             'date.date_format' =>
             '勤怠日は YYYY-MM-DD 形式で指定してください。',
+
+            'date.unique' =>
+            'この日付の勤怠は既に登録されています。',
 
             'clock_in.required' =>
             '出勤時刻は必須です。',
