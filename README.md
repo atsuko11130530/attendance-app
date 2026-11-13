@@ -1,6 +1,6 @@
 # coachtech 勤怠管理アプリ
 
-ある企業が開発した独自の勤怠管理アプリケーションです。  
+ある企業が開発した独自の勤怠管理アプリケーションです。
 一般ユーザーの出退勤・休憩打刻、勤怠一覧・詳細確認、打刻修正申請、マイ勤怠レポート機能に加え、管理者によるスタッフ管理・日次/月次勤怠管理・修正申請承認機能、および外部連携用の公開API（v1）を備えています。
 
 ---
@@ -49,5 +49,119 @@
 
 ### 1. リポジトリのクローン
 ```bash
-git clone <リポジトリURL>
+git clone https://github.com/atsuko11130530/attendance-app.git
 cd attendance-app
+```
+
+### 2. 環境設定ファイル（`.env`）の作成
+```bash
+cp .env.example .env
+```
+
+### 3. Dockerコンテナの起動とパッケージインストール
+```bash
+docker run --rm \
+    -u "$(id -u):$(id -g)" \
+    -v "$(pwd):/var/www/html" \
+    -w /var/www/html \
+    laravelsail/php83-composer:latest \
+    composer install --ignore-platform-reqs
+
+./vendor/bin/sail up -d
+```
+
+### 4. アプリケーションキーの発行とマイグレーション・シーダー実行
+```bash
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail artisan migrate --seed
+```
+
+### 5. フロントエンド資産のビルド
+```bash
+./vendor/bin/sail npm install
+./vendor/bin/sail npm run build
+```
+
+### 6. アクセスURL
+- **アプリケーションURL（一般ユーザー）**：`http://localhost`
+- **管理者ログインURL**：`http://localhost/admin/login`
+- **メール確認画面（Mailpit）**：`http://localhost:8025`
+
+---
+
+## 使用技術（実行環境）
+- PHP 8.3
+- Laravel 10.x（Laravel Fortify / Laravel Sanctum）
+- MySQL 8.0
+- Nginx
+- Docker / Laravel Sail
+- Vite / JavaScript / CSS
+
+---
+
+## ER図
+
+```mermaid
+erDiagram
+    users ||--o{ attendance_records : "has many"
+    users ||--o{ correction_requests : "submits"
+    attendance_records ||--o{ breaks : "has many"
+    attendance_records ||--o{ correction_requests : "target of"
+    correction_requests ||--o{ proposal_breaks : "has many"
+
+    users {
+        bigint id PK
+        string name
+        string email UK
+        timestamp email_verified_at
+        string password
+        boolean admin_status
+        string remember_token
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    attendance_records {
+        bigint id PK
+        bigint user_id FK
+        date date
+        time clock_in
+        time clock_out
+        string status
+        text comment
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    breaks {
+        bigint id PK
+        bigint attendance_record_id FK
+        time break_in
+        time break_out
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    correction_requests {
+        bigint id PK
+        bigint user_id FK
+        bigint attendance_record_id FK
+        string approval_status
+        date application_date
+        date new_date
+        time new_clock_in
+        time new_clock_out
+        text comment
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    proposal_breaks {
+        bigint id PK
+        bigint correction_request_id FK
+        time break_in
+        time break_out
+        timestamp created_at
+        timestamp updated_at
+    }
+```
