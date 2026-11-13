@@ -1,66 +1,53 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# coachtech 勤怠管理アプリ
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+ある企業が開発した独自の勤怠管理アプリケーションです。  
+一般ユーザーの出退勤・休憩打刻、勤怠一覧・詳細確認、打刻修正申請、マイ勤怠レポート機能に加え、管理者によるスタッフ管理・日次/月次勤怠管理・修正申請承認機能、および外部連携用の公開API（v1）を備えています。
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 機能一覧
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 一般ユーザー機能
+- 新規会員登録 / ログイン / ログアウト（Laravel Fortify）
+- メール認証機能（Mailpit）
+- 出勤・休憩入・休憩戻・退勤の打刻機能
+- 勤怠一覧表示（月別切り替え・詳細遷移）
+- 勤怠詳細確認・打刻修正申請
+- 修正申請一覧確認（承認待ち / 承認済み）
+- マイ勤怠レポート（過去6ヶ月の労働時間サマリー / 月次推移 / 遅刻・早退・長時間労働の異常検知）
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 管理者機能
+- 管理者ログイン / ログアウト
+- 日次勤怠一覧確認（前日 / 翌日切り替え）
+- 勤怠詳細確認・直接修正
+- スタッフ一覧確認・スタッフ別月次勤怠一覧確認
+- CSV出力機能（スタッフ別月次勤怠データ）
+- 修正申請一覧確認・承認機能
 
-## Learning Laravel
+### 公開API（v1）
+- `GET /api/v1/attendance-records`：勤怠一覧取得（検索・絞り込み・ページネーション対応）
+- `GET /api/v1/attendance-records/{attendanceRecord}`：勤怠詳細取得
+- `POST /api/v1/attendance-records`：勤怠新規登録（Sanctum認証必須）
+- `PUT /api/v1/attendance-records/{attendanceRecord}`：勤怠更新（Sanctum認証・Policy認可必須）
+- `DELETE /api/v1/attendance-records/{attendanceRecord}`：勤怠削除（Sanctum認証・Policy認可必須）
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## テストログイン情報（シーダーデータ）
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+`php artisan migrate --seed` 実行後に以下のアカウントでログインできます。
 
-## Laravel Sponsors
+| 役割 | 氏名 | メールアドレス | パスワード | 備考 |
+| :--- | :--- | :--- | :--- | :--- |
+| 一般ユーザー1 | ユーザー1 | `user1@example.com` | `password` | メール認証済み（過去6ヶ月分の勤怠データあり） |
+| 一般ユーザー2 | ユーザー2 | `user2@example.com` | `password` | メール認証済み |
+| 管理者ユーザー | 管理者 | `user3@example.com` | `password` | メール認証済み（`admin_status = true`） |
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 環境構築手順（Docker / Laravel Sail）
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 1. リポジトリのクローン
+```bash
+git clone <リポジトリURL>
+cd attendance-app
